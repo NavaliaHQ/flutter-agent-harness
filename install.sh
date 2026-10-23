@@ -4,9 +4,11 @@
 set -euo pipefail
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/template" && pwd)"
+ROOT="$(dirname "$SRC")"
 mkdir -p "${1:-.}"
 DST="$(cd "${1:-.}" && pwd)"
 SKILLS=(review maestro simulator grill-me)
+MARKER=.agents/.harness-version
 
 echo "harness -> $DST"
 
@@ -44,16 +46,23 @@ for s in "${SKILLS[@]}"; do
 done
 chmod +x "$DST/.agents/skills/simulator/scripts/ma.mjs"
 
+# The marker means an earlier install already handed AGENTS.md over to the harness, so
+# a difference is an older harness version and gets replaced. Without it, a different
+# AGENTS.md is the team's own, and it keeps getting a .new beside it until that .new
+# has been merged and deleted.
 MERGE_NEEDED=false
 CREATED=()
-if [ -f "$DST/AGENTS.md" ] && ! cmp -s "$SRC/AGENTS.md" "$DST/AGENTS.md"; then
+if [ ! -f "$DST/AGENTS.md" ] || cmp -s "$SRC/AGENTS.md" "$DST/AGENTS.md"; then
+  cp "$SRC/AGENTS.md" "$DST/AGENTS.md"
+  echo "  wrote AGENTS.md"
+elif [ -e "$DST/$MARKER" ] && [ ! -e "$DST/AGENTS.md.new" ]; then
+  cp "$SRC/AGENTS.md" "$DST/AGENTS.md"
+  echo "  replaced AGENTS.md with this version of the harness"
+else
   cp "$SRC/AGENTS.md" "$DST/AGENTS.md.new"
   MERGE_NEEDED=true
   CREATED+=(AGENTS.md.new)
   echo "  kept your AGENTS.md, wrote AGENTS.md.new next to it"
-else
-  cp "$SRC/AGENTS.md" "$DST/AGENTS.md"
-  echo "  wrote AGENTS.md"
 fi
 
 # Team owned, written once and never touched again.
@@ -87,6 +96,9 @@ if [ ! -e "$DST/derry.yaml" ] && ! grep -q '^scripts:' "$DST/pubspec.yaml" 2>/de
   CREATED+=(derry.yaml)
   echo "  wrote derry.yaml. Add 'scripts: derry.yaml' to pubspec.yaml or derry will not find it"
 fi
+
+git -C "$ROOT" describe --always --dirty 2>/dev/null > "$DST/$MARKER" || echo unknown > "$DST/$MARKER"
+echo "  recorded harness version $(cat "$DST/$MARKER") in $MARKER"
 
 echo "  linked ${#SKILLS[@]} skills into .claude/skills for Claude Code"
 echo

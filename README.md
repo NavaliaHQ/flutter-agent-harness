@@ -72,13 +72,14 @@ Change the structure or the tooling and these diagrams change in the same commit
 
 Re-run the installer to update: it replaces its own files and never overwrites yours.
 
-An existing `AGENTS.md` is never overwritten on a first install: the installer writes `AGENTS.md.new` beside it and leaves the merge to you. Everything it is about to touch is copied to a temp directory first, and the undo command is printed when it finishes.
+An existing `AGENTS.md` is never overwritten on a first install: the installer writes `AGENTS.md.new` beside it and leaves the merge to you. Once that `.new` is merged and deleted, `AGENTS.md` belongs to the harness and every later run replaces it. `.agents/.harness-version` is how the installer tells the two apart, and it records which harness commit the repo has. Everything the installer is about to touch is copied to a temp directory first, and when there was anything to copy, the undo command is printed at the end.
 
 | file | on update | read when |
 |---|---|---|
 | `AGENTS.md` | replaced | every task, by every tool |
 | `.agents/skills/` | replaced | when the task matches one |
 | `.agents/stack.md` | replaced | at project creation or when scaffolding something new, not daily |
+| `.agents/.harness-version` | replaced | by the installer only. The harness commit installed here |
 | `.agents/project.md` | **kept** | every task. The six commands, the flavors, the mock setup |
 | `.agents/facts.md` | **kept** | before designing. Migrations in flight, what is being replaced |
 | `.agents/review-misses.md` | **kept** | before reviewing. What a human caught that the AI review missed |
@@ -113,6 +114,5 @@ A skill loads when the work reaches it, never at the start of every task.
 - **Android.** `ma` and the Maestro runner are macOS and the iOS simulator. Nothing here drives an emulator.
 - **Tests for `ma`.** `compactDescribeUi` is a pure function and should be pinned by a saved AXe tree and its expected compact output. The harness asks for this and does not yet do it.
 - **An AXe version floor.** "1.8.0 or newer" is prose in a markdown file, not a check that runs.
-- **A version marker.** Nothing records which harness version a repo installed, so "re-run the installer" is taken on faith.
 
 Built at Navalia for the Flutter apps we ship.
