@@ -6,7 +6,7 @@ One choice per slot. No alternatives, because a document that says "cubit or riv
 
 The split below matters. `AGENTS.md` says to build what the task needs and nothing beyond it, so a slot listed as conditional stays empty until its condition is true. Scaffolding `go_router` for a one screen app is not following this file, it is ignoring the other one.
 
-### From the first commit, even when the app is tiny
+## From the first commit, even when the app is tiny
 
 | slot | choice | why |
 |---|---|---|
@@ -15,11 +15,11 @@ The split below matters. `AGENTS.md` says to build what the task needs and nothi
 | error handling | a `Result<E, S>` type on every fallible call | makes the error path a compile time obligation instead of a `try` somebody forgot |
 | DI | `get_it`, registration split by layer | the locator is reachable from dependency registration and route builders, nowhere else. Everything else takes constructor injection |
 | unit mocks | `mocktail` | no codegen step on the test loop |
-| scripts | `derry` | one alias file per repo, so the six capabilities in `project.md` have stable names and CI and humans run the identical command |
+| scripts | `derry` | one alias file per repo, so the capabilities in `project.md` have stable names and CI and humans run the identical command |
 | integration tests | `maestro` | black box flows against the shipped app, no test code inside the app |
 | widget identifiers | `Semantics(identifier:)`, see below | retrofitting them into an existing app is a sweep through every widget file |
 
-### When the condition is true, not before
+## When the condition is true, not before
 
 | slot | choice | add it when |
 |---|---|---|
@@ -29,7 +29,7 @@ The split below matters. `AGENTS.md` says to build what the task needs and nothi
 | mock backend | `mockoon` | there is a backend for a flow to hit. One JSON environment committed to the repo, response bodies as separate files |
 | usecases | one class per action, with a `call` method | the action is more than a forward to the repository. A usecase that only forwards is a file the reviewer has to open to learn it does nothing |
 
-### Setup that is easy to get wrong
+## Setup that is easy to get wrong
 
 `derry` does not find `derry.yaml` by itself. `pubspec.yaml` needs a `scripts:` key pointing at it, or every command fails with the alias not found:
 
@@ -37,7 +37,7 @@ The split below matters. `AGENTS.md` says to build what the task needs and nothi
 scripts: derry.yaml
 ```
 
-## Two rules that only exist to make the app testable
+## Rules that only exist to make the app testable
 
 **Every interactive widget carries `Semantics(identifier:)`, formatted `<page>-<name>-<component>`.** Example: `menu-item-add-button`. Maestro matches `id:` against the accessibility identifier, so a widget without one cannot be driven, and a flow that falls back to visible text breaks on the next copy change. Keep it a convention, not a framework: a fluent builder class to produce a string with two hyphens is a class to maintain for nothing.
 
@@ -53,7 +53,7 @@ Test descriptions read `should <outcome> when <condition>`.
 
 ## Good and bad
 
-Six mistakes that keep happening, each with what it costs.
+Mistakes that keep happening, each with what it costs.
 
 ### Dependencies arrive through the constructor
 

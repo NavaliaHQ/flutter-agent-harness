@@ -4,11 +4,21 @@
 set -euo pipefail
 
 SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")/template" && pwd)"
+ROOT="$(dirname "$SRC")"
 mkdir -p "${1:-.}"
 DST="$(cd "${1:-.}" && pwd)"
 SKILLS=(review maestro simulator grill-me)
+MARKER=.agents/.harness-version
+
+# The argument defaults to the current directory, so a bare ./install.sh from this
+# checkout would install the harness into itself.
+if [ "$DST" = "$ROOT" ]; then
+  echo "refusing to install into the harness repo itself. Pass the path of a Flutter repo." >&2
+  exit 1
+fi
 
 echo "harness -> $DST"
+[ -f "$DST/pubspec.yaml" ] || echo "  no pubspec.yaml in $DST. Check this is the Flutter repo you meant"
 
 # Copy whatever is already here before touching it. An update overwrites files and
 # renames skills, and there is no undo for a file that was never in git.
@@ -44,16 +54,23 @@ for s in "${SKILLS[@]}"; do
 done
 chmod +x "$DST/.agents/skills/simulator/scripts/ma.mjs"
 
+# The marker means an earlier install already handed AGENTS.md over to the harness, so
+# a difference is an older harness version and gets replaced. Without it, a different
+# AGENTS.md is the team's own, and it keeps getting a .new beside it until that .new
+# has been merged and deleted.
 MERGE_NEEDED=false
 CREATED=()
-if [ -f "$DST/AGENTS.md" ] && ! cmp -s "$SRC/AGENTS.md" "$DST/AGENTS.md"; then
+if [ ! -f "$DST/AGENTS.md" ] || cmp -s "$SRC/AGENTS.md" "$DST/AGENTS.md"; then
+  cp "$SRC/AGENTS.md" "$DST/AGENTS.md"
+  echo "  wrote AGENTS.md"
+elif [ -e "$DST/$MARKER" ] && [ ! -e "$DST/AGENTS.md.new" ]; then
+  cp "$SRC/AGENTS.md" "$DST/AGENTS.md"
+  echo "  replaced AGENTS.md with this version of the harness"
+else
   cp "$SRC/AGENTS.md" "$DST/AGENTS.md.new"
   MERGE_NEEDED=true
   CREATED+=(AGENTS.md.new)
   echo "  kept your AGENTS.md, wrote AGENTS.md.new next to it"
-else
-  cp "$SRC/AGENTS.md" "$DST/AGENTS.md"
-  echo "  wrote AGENTS.md"
 fi
 
 # Team owned, written once and never touched again.
@@ -69,6 +86,7 @@ done
 # Cursor, Codex, Copilot, Gemini CLI and Devin read .agents/skills directly.
 # Every skill, not just ours: a project writes its own next to them.
 mkdir -p "$DST/.claude/skills"
+LINKED=0
 for dir in "$DST/.agents/skills"/*/; do
   s="$(basename "$dir")"
   link="$DST/.claude/skills/$s"
@@ -76,9 +94,11 @@ for dir in "$DST/.agents/skills"/*/; do
     ln -sfn "../../.agents/skills/$s" "$link"
   elif [ -e "$link" ]; then
     echo "  .claude/skills/$s is a real directory, not linking. Delete it or rename yours"
+    continue
   else
     ln -s "../../.agents/skills/$s" "$link"
   fi
+  LINKED=$((LINKED + 1))
 done
 
 # A starting derry.yaml, only where nothing already defines the aliases.
@@ -88,7 +108,10 @@ if [ ! -e "$DST/derry.yaml" ] && ! grep -q '^scripts:' "$DST/pubspec.yaml" 2>/de
   echo "  wrote derry.yaml. Add 'scripts: derry.yaml' to pubspec.yaml or derry will not find it"
 fi
 
-echo "  linked ${#SKILLS[@]} skills into .claude/skills for Claude Code"
+git -C "$ROOT" describe --always --dirty 2>/dev/null > "$DST/$MARKER" || echo unknown > "$DST/$MARKER"
+echo "  recorded harness version $(cat "$DST/$MARKER") in $MARKER"
+
+echo "  linked $LINKED skills into .claude/skills for Claude Code"
 echo
 echo "AGENTS.md is the contract. Read it before anything else: it is short, and it"
 echo "is what a human will hold the next change to."
@@ -97,7 +120,7 @@ echo "Next, in order:"
 
 step=1
 if grep -q 'TODO' "$DST/.agents/project.md"; then
-  echo "  $step. Fill the six commands in .agents/project.md. Nothing here works until they are real,"
+  echo "  $step. Fill the commands in .agents/project.md. Nothing here works until they are real,"
   echo "     and an agent that cannot find them will invent one."
   step=$((step + 1))
 fi
@@ -109,7 +132,7 @@ if [ "$MERGE_NEEDED" = true ]; then
   echo "     migrations and anything the code cannot tell you into .agents/facts.md."
   step=$((step + 1))
 fi
-echo "  $step. Run the six commands once. An alias that does not run is worse than a missing one."
+echo "  $step. Run each of them once. An alias that does not run is worse than a missing one."
 step=$((step + 1))
 echo "  $step. Say what you did: what was written, what was kept, what you have not run yet."
 
@@ -120,5 +143,6 @@ if [ ${#BACKED_UP[@]} -gt 0 ]; then
   for path in "${TOUCHED[@]}" ${CREATED[@]+"${CREATED[@]}"}; do printf ' "%s"' "$DST/$path"; done
   printf ' && cp -R "%s/." "%s/"\n' "$BACKUP" "$DST"
   echo "It clears everything this install wrote, then puts back what was here. An empty"
-  echo ".claude directory can survive it; nothing else does."
+  echo ".claude directory can survive it; nothing else does. The backup lives under /tmp,"
+  echo "which the system clears on its own: copy it somewhere else if you may need it later."
 fi

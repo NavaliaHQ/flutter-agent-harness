@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // ma - drive a booted iOS simulator through the AXe CLI.
 //
-// Five commands over `axe`, each one adding something `axe` does not do:
+// Commands over `axe`, each one adding something `axe` does not do:
 // compacted describe-ui, waiting on a state instead of sleeping, recovery when the
 // accessibility bridge dies, and a tap that survives Flutter reporting one widget
 // as several accessibility nodes.
@@ -41,6 +41,10 @@ const runProcess = (command, args, timeoutMs) => new Promise((resolve, reject) =
 const runAxeOnce = (args, timeoutMs) => runProcess("axe", args, timeoutMs);
 
 const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+const push = (args, flag, value) => {
+  if (value !== undefined && value !== null) args.push(flag, String(value));
+};
 
 // --- accessibility transport recovery ----------------------------------------
 
@@ -119,6 +123,9 @@ const recoverSimulatorAccessibility = async (udid) => {
     if (!isTranslationFailure(error)) throw error;
   }
 
+  // A reboot throws away whatever state the app was in, which may be the bug being
+  // reproduced. Say so before it happens, not after the screen comes back different.
+  process.stderr.write(`accessibility bridge did not recover, rebooting simulator ${udid}: app state will be lost\n`);
   const bundleId = await activeApplicationBundleId(udid);
   await runProcess("/usr/bin/xcrun", ["simctl", "shutdown", udid], 30000);
   await runProcess("/usr/bin/xcrun", ["simctl", "boot", udid], 30000);
@@ -358,6 +365,46 @@ const screenSize = async (deviceUdid) => {
   return { width, height };
 };
 
+// --- gestures ----------------------------------------------------------------
+
+// Every preset here is an explicit swipe rather than `axe gesture <preset>`.
+// Verified on iOS 26.5: the AXe presets exit 0 and leave the screen untouched,
+// while the same movement as a swipe works every time. Silent no-ops are worse
+// than errors, and `wait --scroll` is built on top of this.
+const swipePreset = async (deviceUdid, preset, options = {}) => {
+  const { width, height } = await screenSize(deviceUdid);
+  const midX = Math.round(width / 2);
+  const midY = Math.round(height / 2);
+  const near = Math.round(height * 0.25);
+  const far = Math.round(height * 0.75);
+  const nearX = Math.round(width * 0.2);
+  const farX = Math.round(width * 0.8);
+
+  // A scroll moves the finger opposite to the content: scroll-down reveals what is
+  // below, so the finger travels up.
+  const swipes = {
+    "scroll-down": [midX, far, midX, near],
+    "scroll-up": [midX, near, midX, far],
+    "scroll-left": [farX, midY, nearX, midY],
+    "scroll-right": [nearX, midY, farX, midY],
+    "swipe-from-left-edge": [2, midY, Math.round(width * 0.85), midY],
+    "swipe-from-right-edge": [width - 2, midY, Math.round(width * 0.15), midY],
+    "swipe-from-top-edge": [midX, 2, midX, Math.round(height * 0.6)],
+    "swipe-from-bottom-edge": [midX, height - 2, midX, Math.round(height * 0.4)],
+  };
+  const [startX, startY, endX, endY] = swipes[preset];
+
+  const args = [
+    "swipe", "--udid", deviceUdid,
+    "--start-x", String(startX), "--start-y", String(startY),
+    "--end-x", String(endX), "--end-y", String(endY),
+    "--duration", String(options.duration ?? 0.4),
+  ];
+  push(args, "--pre-delay", options.pre_delay);
+  push(args, "--post-delay", options.post_delay);
+  return runAxe(args);
+};
+
 // --- foreground detection ----------------------------------------------------
 
 // SpringBoard's own windows are unmistakable, and while one of them owns the display
@@ -404,10 +451,6 @@ const enumOf = (values, description) => ({ type: "string", enum: values, descrip
 const schema = (properties, required = []) => ({ type: "object", properties, required });
 
 const udid = str("Target simulator. Defaults to the only booted one.");
-
-const push = (args, flag, value) => {
-  if (value !== undefined && value !== null) args.push(flag, String(value));
-};
 
 const commands = [
   {
@@ -515,7 +558,7 @@ const commands = [
         }
         // Scrolling only helps a target that has yet to become visible.
         if (params.scroll && !gone && !changed) {
-          await runAxe(["gesture", params.scroll, "--udid", params.udid]);
+          await swipePreset(params.udid, params.scroll);
           // A scroll that changes nothing means the end of the list, or a modal
           // sitting on top. Either way the remaining budget is pure waste. A screen
           // that is merely still loading is also static, so allow several in a row
@@ -640,60 +683,20 @@ const commands = [
       pre_delay: num("Delay in seconds before the gesture."),
       post_delay: num("Delay in seconds after the gesture."),
     }, ["udid", "preset"]),
-    async run(params) {
-      // Every preset here is an explicit swipe rather than `axe gesture <preset>`.
-      // Verified on iOS 26.5: the AXe presets exit 0 and leave the screen untouched,
-      // while the same movement as a swipe works every time. Silent no-ops are worse
-      // than errors, and `wait --scroll` is built on top of this.
-      const { width, height } = await screenSize(params.udid);
-      const midX = Math.round(width / 2);
-      const midY = Math.round(height / 2);
-      const near = Math.round(height * 0.25);
-      const far = Math.round(height * 0.75);
-      const nearX = Math.round(width * 0.2);
-      const farX = Math.round(width * 0.8);
-
-      // A scroll moves the finger opposite to the content: scroll-down reveals what is
-      // below, so the finger travels up.
-      const swipes = {
-        "scroll-down": [midX, far, midX, near],
-        "scroll-up": [midX, near, midX, far],
-        "scroll-left": [farX, midY, nearX, midY],
-        "scroll-right": [nearX, midY, farX, midY],
-        "swipe-from-left-edge": [2, midY, Math.round(width * 0.85), midY],
-        "swipe-from-right-edge": [width - 2, midY, Math.round(width * 0.15), midY],
-        "swipe-from-top-edge": [midX, 2, midX, Math.round(height * 0.6)],
-        "swipe-from-bottom-edge": [midX, height - 2, midX, Math.round(height * 0.4)],
-      };
-      const [startX, startY, endX, endY] = swipes[params.preset];
-
-      const args = [
-        "swipe", "--udid", params.udid,
-        "--start-x", String(startX), "--start-y", String(startY),
-        "--end-x", String(endX), "--end-y", String(endY),
-        "--duration", String(params.duration ?? 0.4),
-      ];
-      push(args, "--pre-delay", params.pre_delay);
-      push(args, "--post-delay", params.post_delay);
-      return runAxe(args);
-    },
+    run: (params) => swipePreset(params.udid, params.preset, params),
   },
 ];
 
 // --- CLI ---------------------------------------------------------------------
 
-const udidCachePath = "/tmp/ma-udid";
-
+// Resolved on every call, never cached: a cached udid outlives the simulator it named,
+// and every later command then fails against a device that is no longer booted.
 const resolveUdid = async () => {
-  const cached = fs.existsSync(udidCachePath) ? fs.readFileSync(udidCachePath, "utf8").trim() : "";
-  if (cached) return cached;
-
   const output = await runProcess("/usr/bin/xcrun", ["simctl", "list", "devices", "booted", "-j"], 15000);
   const booted = Object.values(JSON.parse(output).devices).flat().filter((device) => device.state === "Booted");
   if (booted.length !== 1) {
     throw new Error(booted.length ? "several booted simulators; pass --udid" : "no booted simulator");
   }
-  fs.writeFileSync(udidCachePath, booted[0].udid);
   return booted[0].udid;
 };
 
@@ -717,8 +720,16 @@ const parseArgs = (command, argv) => {
     index += 1;
     const value = argv[index];
     if (value === undefined) throw new Error(`missing value for ${token}`);
-    if (spec.type === "array") (params[key] ??= []).push(value);
-    else params[key] = spec.type === "integer" || spec.type === "number" ? Number(value) : value;
+    if (spec.type === "array") {
+      (params[key] ??= []).push(value);
+    } else if (spec.type === "integer" || spec.type === "number") {
+      // NaN slips through every comparison: a NaN --timeout made `wait` poll forever.
+      const number = Number(value);
+      if (!Number.isFinite(number)) throw new Error(`${token} needs a number, got: ${value}`);
+      params[key] = number;
+    } else {
+      params[key] = value;
+    }
   }
   return params;
 };

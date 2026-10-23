@@ -8,7 +8,7 @@ How an AI agent is expected to work in a Flutter repo. The point is verification
 
 ## How it works
 
-Four steps belong to the agent. The last one does not, and nothing the agent does replaces it. Pink is replaced on every update, blue is yours: written once, then kept current by the agent as it learns.
+Every step but the last belongs to the agent, in grey. The last one, in amber, does not, and nothing the agent does replaces it. Of the files it reads, pink is replaced on every update and blue is yours: written once, then kept current by the agent as it learns.
 
 ```mermaid
 ---
@@ -42,8 +42,8 @@ flowchart LR
     t1 ~~~ t2 ~~~ t3 ~~~ t4
 
     classDef hdr fill:none,stroke:none,color:#8b949e,font-weight:bold
-    classDef agent fill:#dfe2fb,stroke:#3454d1,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
-    classDef gate fill:#f5e3fb,stroke:#a81fa8,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
+    classDef agent fill:#eef0f3,stroke:#6e7781,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
+    classDef gate fill:#fdf0d5,stroke:#c98a00,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
     classDef harness fill:#f9e3fb,stroke:#c83cc8,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
     classDef yours fill:#d7ecfb,stroke:#3b9fe0,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
     classDef tool fill:#dcf3dc,stroke:#39a339,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
@@ -60,26 +60,27 @@ Every handback ends here, and a line nobody ran does not go in it.
 
 ```
 ## Evidence
-- `derry linter local` -> 0 issues
-- `derry tests local` -> 6319 passed
+- `derry lint` -> 0 issues
+- `derry test` -> 412 passed
 - `<integration> --flow integration_test/order/add_item.yaml` -> passed
 - not checked: Android, the flag-off path
 ```
 
-Change the structure or the tooling and these diagrams change in the same commit. One that disagrees with the code is worse than none, because people stop reading the code and believe the picture.
+Change the structure or the tooling and the diagram changes in the same commit. One that disagrees with the code is worse than none, because people stop reading the code and believe the picture.
 
 ## Files
 
 Re-run the installer to update: it replaces its own files and never overwrites yours.
 
-An existing `AGENTS.md` is never overwritten on a first install: the installer writes `AGENTS.md.new` beside it and leaves the merge to you. Everything it is about to touch is copied to a temp directory first, and the undo command is printed when it finishes.
+An existing `AGENTS.md` is never overwritten on a first install: the installer writes `AGENTS.md.new` beside it and leaves the merge to you. Once that `.new` is merged and deleted, `AGENTS.md` belongs to the harness and every later run replaces it. `.agents/.harness-version` is how the installer tells the two apart, and it records which harness commit the repo has. Everything the installer is about to touch is copied to a temp directory first, and when there was anything to copy, the undo command is printed at the end.
 
 | file | on update | read when |
 |---|---|---|
 | `AGENTS.md` | replaced | every task, by every tool |
 | `.agents/skills/` | replaced | when the task matches one |
 | `.agents/stack.md` | replaced | at project creation or when scaffolding something new, not daily |
-| `.agents/project.md` | **kept** | every task. The six commands, the flavors, the mock setup |
+| `.agents/.harness-version` | replaced | by the installer only. The harness commit installed here |
+| `.agents/project.md` | **kept** | every task. The commands, the flavors, the mock setup |
 | `.agents/facts.md` | **kept** | before designing. Migrations in flight, what is being replaced |
 | `.agents/review-misses.md` | **kept** | before reviewing. What a human caught that the AI review missed |
 | `derry.yaml` | **kept** | the six command aliases. Written once, only when nothing already defines them |
@@ -103,9 +104,9 @@ A skill loads when the work reaches it, never at the start of every task.
 | `review` | a diff is waiting for approval | review it for correctness and scope, within the diff boundary. Not named `code-review`, which would shadow the built-in |
 | `grill-me` | a decision is still open | settle it before implementing, three rounds maximum |
 
-`simulator` ships `ma`, a CLI over [AXe](https://github.com/cameroncooke/AXe) that compacts the accessibility tree (around 500 KB down to a few KB), waits on screen state instead of sleeping, batches steps into one round trip, and recovers when the simulator's accessibility bridge dies. Install AXe with `brew install cameroncooke/axe/axe`.
+`simulator` ships `ma`, a CLI over [AXe](https://github.com/cameroncooke/AXe) that compacts the accessibility tree (around 160 KB down to a few KB), waits on screen state instead of sleeping, batches steps into one round trip, and recovers when the simulator's accessibility bridge dies. It needs Node 18 or newer, and AXe: `brew install cameroncooke/axe/axe`.
 
-`ma` knows how to drive a simulator; it does not know your app. The skill tells the agent to write that down in `.agents/skills/app-navigation/SKILL.md` as it learns: the recipes, the selectors per screen, the gotchas that cost a session. That file is yours, the installer only symlinks it for Claude Code along with the rest.
+`ma` knows how to drive a simulator; it does not know your app. The skill tells the agent to write that down in `.agents/skills/app-navigation/SKILL.md` as it learns: the recipes, the selectors per screen, the gotchas that cost a session. That file is yours. The skill also tells the agent to link it into `.claude/skills/` when it creates it, and every later install re-links it along with the rest.
 
 ## Not here yet
 
@@ -113,6 +114,5 @@ A skill loads when the work reaches it, never at the start of every task.
 - **Android.** `ma` and the Maestro runner are macOS and the iOS simulator. Nothing here drives an emulator.
 - **Tests for `ma`.** `compactDescribeUi` is a pure function and should be pinned by a saved AXe tree and its expected compact output. The harness asks for this and does not yet do it.
 - **An AXe version floor.** "1.8.0 or newer" is prose in a markdown file, not a check that runs.
-- **A version marker.** Nothing records which harness version a repo installed, so "re-run the installer" is taken on faith.
 
 Built at Navalia for the Flutter apps we ship.

@@ -6,11 +6,17 @@ The `template/AGENTS.md` in here is the file every installed project reads on ev
 
 ## The diagrams are part of the structure
 
-`README.md` carries three Mermaid diagrams: the cycle, who owns what after an install, and when each skill loads. They are the first thing a reader sees and the only picture of the repo that exists.
+`README.md` carries one Mermaid diagram in three bands: the cycle, the files the agent reads coloured by who owns them after an install, and the skills. It is the first thing a reader sees and the only picture of the repo that exists.
 
 **Change the structure or the tooling, change the diagram in the same commit.** A skill added, renamed or removed; a file that moves between harness-owned and team-owned; a step added to the cycle. A diagram that disagrees with the code is worse than no diagram, because people stop reading the code and believe the picture.
 
-They are Mermaid rather than an exported image on purpose: a diff shows the change, nobody needs a drawing tool to fix a word, and the agents that read this repo can read them too. Keep them that way.
+It is Mermaid rather than an exported image on purpose: a diff shows the change, nobody needs a drawing tool to fix a word, and the agents that read this repo can read it too. Keep it that way.
+
+## No counts in prose
+
+Never write "four skills", "the six commands", "three rules". The number is right on the day it is written and wrong the first time anyone adds one, and nothing fails when it goes stale: the reader simply believes it. Name the thing, not how many there are, and let the list, the table or the directory be the count.
+
+This is not hypothetical here. A change that added a command to `ma` updated "five commands" in one file and missed the identical sentence in the skill beside it.
 
 ## Before handing back
 
