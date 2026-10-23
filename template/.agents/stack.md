@@ -6,7 +6,7 @@ One choice per slot. No alternatives, because a document that says "cubit or riv
 
 The split below matters. `AGENTS.md` says to build what the task needs and nothing beyond it, so a slot listed as conditional stays empty until its condition is true. Scaffolding `go_router` for a one screen app is not following this file, it is ignoring the other one.
 
-### From the first commit, even when the app is tiny
+## From the first commit, even when the app is tiny
 
 | slot | choice | why |
 |---|---|---|
@@ -19,7 +19,7 @@ The split below matters. `AGENTS.md` says to build what the task needs and nothi
 | integration tests | `maestro` | black box flows against the shipped app, no test code inside the app |
 | widget identifiers | `Semantics(identifier:)`, see below | retrofitting them into an existing app is a sweep through every widget file |
 
-### When the condition is true, not before
+## When the condition is true, not before
 
 | slot | choice | add it when |
 |---|---|---|
@@ -29,7 +29,7 @@ The split below matters. `AGENTS.md` says to build what the task needs and nothi
 | mock backend | `mockoon` | there is a backend for a flow to hit. One JSON environment committed to the repo, response bodies as separate files |
 | usecases | one class per action, with a `call` method | the action is more than a forward to the repository. A usecase that only forwards is a file the reviewer has to open to learn it does nothing |
 
-### Setup that is easy to get wrong
+## Setup that is easy to get wrong
 
 `derry` does not find `derry.yaml` by itself. `pubspec.yaml` needs a `scripts:` key pointing at it, or every command fails with the alias not found:
 
