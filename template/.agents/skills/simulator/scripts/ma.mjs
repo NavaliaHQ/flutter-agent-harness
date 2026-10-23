@@ -721,8 +721,16 @@ const parseArgs = (command, argv) => {
     index += 1;
     const value = argv[index];
     if (value === undefined) throw new Error(`missing value for ${token}`);
-    if (spec.type === "array") (params[key] ??= []).push(value);
-    else params[key] = spec.type === "integer" || spec.type === "number" ? Number(value) : value;
+    if (spec.type === "array") {
+      (params[key] ??= []).push(value);
+    } else if (spec.type === "integer" || spec.type === "number") {
+      // NaN slips through every comparison: a NaN --timeout made `wait` poll forever.
+      const number = Number(value);
+      if (!Number.isFinite(number)) throw new Error(`${token} needs a number, got: ${value}`);
+      params[key] = number;
+    } else {
+      params[key] = value;
+    }
   }
   return params;
 };
