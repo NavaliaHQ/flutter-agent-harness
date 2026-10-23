@@ -686,18 +686,14 @@ const commands = [
 
 // --- CLI ---------------------------------------------------------------------
 
-const udidCachePath = "/tmp/ma-udid";
-
+// Resolved on every call, never cached: a cached udid outlives the simulator it named,
+// and every later command then fails against a device that is no longer booted.
 const resolveUdid = async () => {
-  const cached = fs.existsSync(udidCachePath) ? fs.readFileSync(udidCachePath, "utf8").trim() : "";
-  if (cached) return cached;
-
   const output = await runProcess("/usr/bin/xcrun", ["simctl", "list", "devices", "booted", "-j"], 15000);
   const booted = Object.values(JSON.parse(output).devices).flat().filter((device) => device.state === "Booted");
   if (booted.length !== 1) {
     throw new Error(booted.length ? "several booted simulators; pass --udid" : "no booted simulator");
   }
-  fs.writeFileSync(udidCachePath, booted[0].udid);
   return booted[0].udid;
 };
 
