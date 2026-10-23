@@ -60,8 +60,8 @@ Every handback ends here, and a line nobody ran does not go in it.
 
 ```
 ## Evidence
-- `derry linter local` -> 0 issues
-- `derry tests local` -> 6319 passed
+- `derry lint` -> 0 issues
+- `derry test` -> 412 passed
 - `<integration> --flow integration_test/order/add_item.yaml` -> passed
 - not checked: Android, the flag-off path
 ```
