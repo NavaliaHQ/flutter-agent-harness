@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // ma - drive a booted iOS simulator through the AXe CLI.
 //
-// Six commands over `axe`, each one adding something `axe` does not do:
+// Commands over `axe`, each one adding something `axe` does not do:
 // compacted describe-ui, waiting on a state instead of sleeping, recovery when the
 // accessibility bridge dies, and a tap that survives Flutter reporting one widget
 // as several accessibility nodes.

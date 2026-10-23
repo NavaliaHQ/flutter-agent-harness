@@ -12,6 +12,12 @@ The `template/AGENTS.md` in here is the file every installed project reads on ev
 
 It is Mermaid rather than an exported image on purpose: a diff shows the change, nobody needs a drawing tool to fix a word, and the agents that read this repo can read it too. Keep it that way.
 
+## No counts in prose
+
+Never write "four skills", "the six commands", "three rules". The number is right on the day it is written and wrong the first time anyone adds one, and nothing fails when it goes stale: the reader simply believes it. Name the thing, not how many there are, and let the list, the table or the directory be the count.
+
+This is not hypothetical here. A change that added a command to `ma` updated "five commands" in one file and missed the identical sentence in the skill beside it.
+
 ## Before handing back
 
 Run the installer into a throwaway directory and check what it produced, rather than reasoning about the script:

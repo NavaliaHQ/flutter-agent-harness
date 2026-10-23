@@ -8,7 +8,7 @@ How an AI agent is expected to work in a Flutter repo. The point is verification
 
 ## How it works
 
-Four steps belong to the agent, in grey. The last one, in amber, does not, and nothing the agent does replaces it. Of the files it reads, pink is replaced on every update and blue is yours: written once, then kept current by the agent as it learns.
+Every step but the last belongs to the agent, in grey. The last one, in amber, does not, and nothing the agent does replaces it. Of the files it reads, pink is replaced on every update and blue is yours: written once, then kept current by the agent as it learns.
 
 ```mermaid
 ---
@@ -80,7 +80,7 @@ An existing `AGENTS.md` is never overwritten on a first install: the installer w
 | `.agents/skills/` | replaced | when the task matches one |
 | `.agents/stack.md` | replaced | at project creation or when scaffolding something new, not daily |
 | `.agents/.harness-version` | replaced | by the installer only. The harness commit installed here |
-| `.agents/project.md` | **kept** | every task. The six commands, the flavors, the mock setup |
+| `.agents/project.md` | **kept** | every task. The commands, the flavors, the mock setup |
 | `.agents/facts.md` | **kept** | before designing. Migrations in flight, what is being replaced |
 | `.agents/review-misses.md` | **kept** | before reviewing. What a human caught that the AI review missed |
 | `derry.yaml` | **kept** | the six command aliases. Written once, only when nothing already defines them |

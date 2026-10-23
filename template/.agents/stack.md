@@ -15,7 +15,7 @@ The split below matters. `AGENTS.md` says to build what the task needs and nothi
 | error handling | a `Result<E, S>` type on every fallible call | makes the error path a compile time obligation instead of a `try` somebody forgot |
 | DI | `get_it`, registration split by layer | the locator is reachable from dependency registration and route builders, nowhere else. Everything else takes constructor injection |
 | unit mocks | `mocktail` | no codegen step on the test loop |
-| scripts | `derry` | one alias file per repo, so the six capabilities in `project.md` have stable names and CI and humans run the identical command |
+| scripts | `derry` | one alias file per repo, so the capabilities in `project.md` have stable names and CI and humans run the identical command |
 | integration tests | `maestro` | black box flows against the shipped app, no test code inside the app |
 | widget identifiers | `Semantics(identifier:)`, see below | retrofitting them into an existing app is a sweep through every widget file |
 
@@ -37,7 +37,7 @@ The split below matters. `AGENTS.md` says to build what the task needs and nothi
 scripts: derry.yaml
 ```
 
-## Two rules that only exist to make the app testable
+## Rules that only exist to make the app testable
 
 **Every interactive widget carries `Semantics(identifier:)`, formatted `<page>-<name>-<component>`.** Example: `menu-item-add-button`. Maestro matches `id:` against the accessibility identifier, so a widget without one cannot be driven, and a flow that falls back to visible text breaks on the next copy change. Keep it a convention, not a framework: a fluent builder class to produce a string with two hyphens is a class to maintain for nothing.
 
@@ -53,7 +53,7 @@ Test descriptions read `should <outcome> when <condition>`.
 
 ## Good and bad
 
-Six mistakes that keep happening, each with what it costs.
+Mistakes that keep happening, each with what it costs.
 
 ### Dependencies arrive through the constructor
 

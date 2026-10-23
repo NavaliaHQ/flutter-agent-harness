@@ -120,7 +120,7 @@ echo "Next, in order:"
 
 step=1
 if grep -q 'TODO' "$DST/.agents/project.md"; then
-  echo "  $step. Fill the six commands in .agents/project.md. Nothing here works until they are real,"
+  echo "  $step. Fill the commands in .agents/project.md. Nothing here works until they are real,"
   echo "     and an agent that cannot find them will invent one."
   step=$((step + 1))
 fi
@@ -132,7 +132,7 @@ if [ "$MERGE_NEEDED" = true ]; then
   echo "     migrations and anything the code cannot tell you into .agents/facts.md."
   step=$((step + 1))
 fi
-echo "  $step. Run the six commands once. An alias that does not run is worse than a missing one."
+echo "  $step. Run each of them once. An alias that does not run is worse than a missing one."
 step=$((step + 1))
 echo "  $step. Say what you did: what was written, what was kept, what you have not run yet."
 

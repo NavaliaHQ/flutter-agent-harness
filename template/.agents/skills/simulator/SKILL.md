@@ -13,7 +13,7 @@ Launch the app with the command in `.agents/project.md`. Everything after that i
 .agents/skills/simulator/scripts/ma.mjs help
 ```
 
-Requires Node 18 or newer and AXe 1.8.0 or newer (`brew install cameroncooke/axe/axe`). `ma` is six commands on top of AXe. For anything else, call `axe` directly and read `axe help <subcommand>`; unlike `ma` it needs `--udid`, which `ma list-simulators` prints.
+Requires Node 18 or newer and AXe 1.8.0 or newer (`brew install cameroncooke/axe/axe`). `ma` wraps the AXe commands that needed more than a pass-through. For anything else, call `axe` directly and read `axe help <subcommand>`; unlike `ma` it needs `--udid`, which `ma list-simulators` prints.
 
 ## The loop
 

@@ -4,7 +4,7 @@ Fill this in once. The harness never overwrites it.
 
 ## Commands
 
-Six capabilities. Every one of them needs a command here, or the agent will invent one.
+Every capability below needs a command here, or the agent will invent one.
 
 | capability | command |
 |---|---|
