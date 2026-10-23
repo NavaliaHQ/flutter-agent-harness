@@ -10,7 +10,15 @@ DST="$(cd "${1:-.}" && pwd)"
 SKILLS=(review maestro simulator grill-me)
 MARKER=.agents/.harness-version
 
+# The argument defaults to the current directory, so a bare ./install.sh from this
+# checkout would install the harness into itself.
+if [ "$DST" = "$ROOT" ]; then
+  echo "refusing to install into the harness repo itself. Pass the path of a Flutter repo." >&2
+  exit 1
+fi
+
 echo "harness -> $DST"
+[ -f "$DST/pubspec.yaml" ] || echo "  no pubspec.yaml in $DST. Check this is the Flutter repo you meant"
 
 # Copy whatever is already here before touching it. An update overwrites files and
 # renames skills, and there is no undo for a file that was never in git.
