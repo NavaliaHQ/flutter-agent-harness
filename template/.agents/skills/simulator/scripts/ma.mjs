@@ -123,6 +123,9 @@ const recoverSimulatorAccessibility = async (udid) => {
     if (!isTranslationFailure(error)) throw error;
   }
 
+  // A reboot throws away whatever state the app was in, which may be the bug being
+  // reproduced. Say so before it happens, not after the screen comes back different.
+  process.stderr.write(`accessibility bridge did not recover, rebooting simulator ${udid}: app state will be lost\n`);
   const bundleId = await activeApplicationBundleId(udid);
   await runProcess("/usr/bin/xcrun", ["simctl", "shutdown", udid], 30000);
   await runProcess("/usr/bin/xcrun", ["simctl", "boot", udid], 30000);
