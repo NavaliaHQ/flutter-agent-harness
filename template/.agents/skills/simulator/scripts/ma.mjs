@@ -42,6 +42,10 @@ const runAxeOnce = (args, timeoutMs) => runProcess("axe", args, timeoutMs);
 
 const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
+const push = (args, flag, value) => {
+  if (value !== undefined && value !== null) args.push(flag, String(value));
+};
+
 // --- accessibility transport recovery ----------------------------------------
 
 // The simulator's accessibility bridge dies mid session and every later command fails
@@ -358,6 +362,46 @@ const screenSize = async (deviceUdid) => {
   return { width, height };
 };
 
+// --- gestures ----------------------------------------------------------------
+
+// Every preset here is an explicit swipe rather than `axe gesture <preset>`.
+// Verified on iOS 26.5: the AXe presets exit 0 and leave the screen untouched,
+// while the same movement as a swipe works every time. Silent no-ops are worse
+// than errors, and `wait --scroll` is built on top of this.
+const swipePreset = async (deviceUdid, preset, options = {}) => {
+  const { width, height } = await screenSize(deviceUdid);
+  const midX = Math.round(width / 2);
+  const midY = Math.round(height / 2);
+  const near = Math.round(height * 0.25);
+  const far = Math.round(height * 0.75);
+  const nearX = Math.round(width * 0.2);
+  const farX = Math.round(width * 0.8);
+
+  // A scroll moves the finger opposite to the content: scroll-down reveals what is
+  // below, so the finger travels up.
+  const swipes = {
+    "scroll-down": [midX, far, midX, near],
+    "scroll-up": [midX, near, midX, far],
+    "scroll-left": [farX, midY, nearX, midY],
+    "scroll-right": [nearX, midY, farX, midY],
+    "swipe-from-left-edge": [2, midY, Math.round(width * 0.85), midY],
+    "swipe-from-right-edge": [width - 2, midY, Math.round(width * 0.15), midY],
+    "swipe-from-top-edge": [midX, 2, midX, Math.round(height * 0.6)],
+    "swipe-from-bottom-edge": [midX, height - 2, midX, Math.round(height * 0.4)],
+  };
+  const [startX, startY, endX, endY] = swipes[preset];
+
+  const args = [
+    "swipe", "--udid", deviceUdid,
+    "--start-x", String(startX), "--start-y", String(startY),
+    "--end-x", String(endX), "--end-y", String(endY),
+    "--duration", String(options.duration ?? 0.4),
+  ];
+  push(args, "--pre-delay", options.pre_delay);
+  push(args, "--post-delay", options.post_delay);
+  return runAxe(args);
+};
+
 // --- foreground detection ----------------------------------------------------
 
 // SpringBoard's own windows are unmistakable, and while one of them owns the display
@@ -404,10 +448,6 @@ const enumOf = (values, description) => ({ type: "string", enum: values, descrip
 const schema = (properties, required = []) => ({ type: "object", properties, required });
 
 const udid = str("Target simulator. Defaults to the only booted one.");
-
-const push = (args, flag, value) => {
-  if (value !== undefined && value !== null) args.push(flag, String(value));
-};
 
 const commands = [
   {
@@ -515,7 +555,7 @@ const commands = [
         }
         // Scrolling only helps a target that has yet to become visible.
         if (params.scroll && !gone && !changed) {
-          await runAxe(["gesture", params.scroll, "--udid", params.udid]);
+          await swipePreset(params.udid, params.scroll);
           // A scroll that changes nothing means the end of the list, or a modal
           // sitting on top. Either way the remaining budget is pure waste. A screen
           // that is merely still loading is also static, so allow several in a row
@@ -640,43 +680,7 @@ const commands = [
       pre_delay: num("Delay in seconds before the gesture."),
       post_delay: num("Delay in seconds after the gesture."),
     }, ["udid", "preset"]),
-    async run(params) {
-      // Every preset here is an explicit swipe rather than `axe gesture <preset>`.
-      // Verified on iOS 26.5: the AXe presets exit 0 and leave the screen untouched,
-      // while the same movement as a swipe works every time. Silent no-ops are worse
-      // than errors, and `wait --scroll` is built on top of this.
-      const { width, height } = await screenSize(params.udid);
-      const midX = Math.round(width / 2);
-      const midY = Math.round(height / 2);
-      const near = Math.round(height * 0.25);
-      const far = Math.round(height * 0.75);
-      const nearX = Math.round(width * 0.2);
-      const farX = Math.round(width * 0.8);
-
-      // A scroll moves the finger opposite to the content: scroll-down reveals what is
-      // below, so the finger travels up.
-      const swipes = {
-        "scroll-down": [midX, far, midX, near],
-        "scroll-up": [midX, near, midX, far],
-        "scroll-left": [farX, midY, nearX, midY],
-        "scroll-right": [nearX, midY, farX, midY],
-        "swipe-from-left-edge": [2, midY, Math.round(width * 0.85), midY],
-        "swipe-from-right-edge": [width - 2, midY, Math.round(width * 0.15), midY],
-        "swipe-from-top-edge": [midX, 2, midX, Math.round(height * 0.6)],
-        "swipe-from-bottom-edge": [midX, height - 2, midX, Math.round(height * 0.4)],
-      };
-      const [startX, startY, endX, endY] = swipes[params.preset];
-
-      const args = [
-        "swipe", "--udid", params.udid,
-        "--start-x", String(startX), "--start-y", String(startY),
-        "--end-x", String(endX), "--end-y", String(endY),
-        "--duration", String(params.duration ?? 0.4),
-      ];
-      push(args, "--pre-delay", params.pre_delay);
-      push(args, "--post-delay", params.post_delay);
-      return runAxe(args);
-    },
+    run: (params) => swipePreset(params.udid, params.preset, params),
   },
 ];
 
