@@ -143,5 +143,6 @@ if [ ${#BACKED_UP[@]} -gt 0 ]; then
   for path in "${TOUCHED[@]}" ${CREATED[@]+"${CREATED[@]}"}; do printf ' "%s"' "$DST/$path"; done
   printf ' && cp -R "%s/." "%s/"\n' "$BACKUP" "$DST"
   echo "It clears everything this install wrote, then puts back what was here. An empty"
-  echo ".claude directory can survive it; nothing else does."
+  echo ".claude directory can survive it; nothing else does. The backup lives under /tmp,"
+  echo "which the system clears on its own: copy it somewhere else if you may need it later."
 fi
