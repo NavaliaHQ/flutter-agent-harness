@@ -86,6 +86,7 @@ done
 # Cursor, Codex, Copilot, Gemini CLI and Devin read .agents/skills directly.
 # Every skill, not just ours: a project writes its own next to them.
 mkdir -p "$DST/.claude/skills"
+LINKED=0
 for dir in "$DST/.agents/skills"/*/; do
   s="$(basename "$dir")"
   link="$DST/.claude/skills/$s"
@@ -93,9 +94,11 @@ for dir in "$DST/.agents/skills"/*/; do
     ln -sfn "../../.agents/skills/$s" "$link"
   elif [ -e "$link" ]; then
     echo "  .claude/skills/$s is a real directory, not linking. Delete it or rename yours"
+    continue
   else
     ln -s "../../.agents/skills/$s" "$link"
   fi
+  LINKED=$((LINKED + 1))
 done
 
 # A starting derry.yaml, only where nothing already defines the aliases.
@@ -108,7 +111,7 @@ fi
 git -C "$ROOT" describe --always --dirty 2>/dev/null > "$DST/$MARKER" || echo unknown > "$DST/$MARKER"
 echo "  recorded harness version $(cat "$DST/$MARKER") in $MARKER"
 
-echo "  linked ${#SKILLS[@]} skills into .claude/skills for Claude Code"
+echo "  linked $LINKED skills into .claude/skills for Claude Code"
 echo
 echo "AGENTS.md is the contract. Read it before anything else: it is short, and it"
 echo "is what a human will hold the next change to."
