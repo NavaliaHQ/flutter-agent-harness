@@ -1,0 +1,15 @@
+# Aliases for the six capabilities `.agents/project.md` names.
+# `pubspec.yaml` needs `scripts: derry.yaml` or derry will not find this file.
+# Fill in what this repo actually runs, then copy the commands into project.md.
+
+format: dart format -l 120 .
+
+lint: dart analyze
+
+test: flutter test --coverage
+
+test_file: flutter test
+
+integration: ./scripts/run-integration-tests.sh
+
+gen: dart run build_runner build --delete-conflicting-outputs
