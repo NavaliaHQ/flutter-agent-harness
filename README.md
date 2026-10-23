@@ -8,7 +8,7 @@ How an AI agent is expected to work in a Flutter repo. The point is verification
 
 ## How it works
 
-Four steps belong to the agent. The last one does not, and nothing the agent does replaces it. Pink is replaced on every update, blue is yours: written once, then kept current by the agent as it learns.
+Four steps belong to the agent, in grey. The last one, in amber, does not, and nothing the agent does replaces it. Of the files it reads, pink is replaced on every update and blue is yours: written once, then kept current by the agent as it learns.
 
 ```mermaid
 ---
@@ -42,8 +42,8 @@ flowchart LR
     t1 ~~~ t2 ~~~ t3 ~~~ t4
 
     classDef hdr fill:none,stroke:none,color:#8b949e,font-weight:bold
-    classDef agent fill:#dfe2fb,stroke:#3454d1,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
-    classDef gate fill:#f5e3fb,stroke:#a81fa8,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
+    classDef agent fill:#eef0f3,stroke:#6e7781,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
+    classDef gate fill:#fdf0d5,stroke:#c98a00,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
     classDef harness fill:#f9e3fb,stroke:#c83cc8,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
     classDef yours fill:#d7ecfb,stroke:#3b9fe0,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
     classDef tool fill:#dcf3dc,stroke:#39a339,stroke-width:3px,color:#1a1a1a,rx:10,ry:10
@@ -66,7 +66,7 @@ Every handback ends here, and a line nobody ran does not go in it.
 - not checked: Android, the flag-off path
 ```
 
-Change the structure or the tooling and these diagrams change in the same commit. One that disagrees with the code is worse than none, because people stop reading the code and believe the picture.
+Change the structure or the tooling and the diagram changes in the same commit. One that disagrees with the code is worse than none, because people stop reading the code and believe the picture.
 
 ## Files
 
