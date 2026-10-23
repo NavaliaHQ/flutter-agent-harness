@@ -104,9 +104,9 @@ A skill loads when the work reaches it, never at the start of every task.
 | `review` | a diff is waiting for approval | review it for correctness and scope, within the diff boundary. Not named `code-review`, which would shadow the built-in |
 | `grill-me` | a decision is still open | settle it before implementing, three rounds maximum |
 
-`simulator` ships `ma`, a CLI over [AXe](https://github.com/cameroncooke/AXe) that compacts the accessibility tree (around 500 KB down to a few KB), waits on screen state instead of sleeping, batches steps into one round trip, and recovers when the simulator's accessibility bridge dies. Install AXe with `brew install cameroncooke/axe/axe`.
+`simulator` ships `ma`, a CLI over [AXe](https://github.com/cameroncooke/AXe) that compacts the accessibility tree (around 160 KB down to a few KB), waits on screen state instead of sleeping, batches steps into one round trip, and recovers when the simulator's accessibility bridge dies. It needs Node 18 or newer, and AXe: `brew install cameroncooke/axe/axe`.
 
-`ma` knows how to drive a simulator; it does not know your app. The skill tells the agent to write that down in `.agents/skills/app-navigation/SKILL.md` as it learns: the recipes, the selectors per screen, the gotchas that cost a session. That file is yours, the installer only symlinks it for Claude Code along with the rest.
+`ma` knows how to drive a simulator; it does not know your app. The skill tells the agent to write that down in `.agents/skills/app-navigation/SKILL.md` as it learns: the recipes, the selectors per screen, the gotchas that cost a session. That file is yours. The skill also tells the agent to link it into `.claude/skills/` when it creates it, and every later install re-links it along with the rest.
 
 ## Not here yet
 

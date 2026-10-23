@@ -7,18 +7,18 @@ description: Drive a running app on an iOS simulator to see what is actually on 
 
 Maestro proves a journey. This proves what is on screen right now, in seconds, which is what you need while building and before writing the flow that will drive it.
 
-Launch the app with the command in `.agents/project.md`. Everything after that is `ma`, which resolves the booted simulator on its own:
+Launch the app with the command in `.agents/project.md`. Everything after that is `ma`, which resolves the booted simulator on its own. It is not on the PATH: every `ma` below means this script, run from the repo root:
 
 ```bash
 .agents/skills/simulator/scripts/ma.mjs help
 ```
 
-Requires AXe 1.8.0 or newer (`brew install cameroncooke/axe/axe`). `ma` is five commands on top of it; for anything else call `axe` directly and read `axe help <subcommand>`.
+Requires Node 18 or newer and AXe 1.8.0 or newer (`brew install cameroncooke/axe/axe`). `ma` is six commands on top of AXe. For anything else, call `axe` directly and read `axe help <subcommand>`; unlike `ma` it needs `--udid`, which `ma list-simulators` prints.
 
 ## The loop
 
 1. `ma describe-ui` to see what is there
-2. act: `ma tap --id <identifier>`, `ma gesture --preset scroll-down`, `axe type --text ...`
+2. act: `ma tap --id <identifier>`, `ma gesture --preset scroll-down`, `ma batch --step "type <text>"`
 3. `ma wait --changed` or `ma wait --id <identifier>` to confirm the screen moved
 
 Never act on a screen you have not described. Coordinates read off a screenshot and identifiers remembered from the Dart source are both guesses, and both fail quietly.
@@ -39,7 +39,7 @@ A describe you print "just to check" is a few thousand tokens that push out some
 
 | | |
 |---|---|
-| `describe-ui` | the raw tree is around 500 KB and will not survive two calls in one context. Compacted to a few KB: `i` id, `l` label, `t` type, `e:0` disabled, `v` value, `p` center when the selector is ambiguous. Offscreen and zero-size nodes are dropped, so scroll and describe again |
+| `describe-ui` | the raw tree is around 160 KB and will not survive two calls in one context. Compacted to a few KB: `i` id, `l` label, `t` type, `e:0` disabled, `v` value, `p` center when the selector is ambiguous. Offscreen and zero-size nodes are dropped, so scroll and describe again |
 | `wait` | polls until a selector appears, disappears, or the screen changes. `--scroll scroll-down` to reach a row that is not rendered yet, giving up when scrolling stops changing anything |
 | `tap` | retries by center point when Flutter reports one widget as several accessibility nodes and AXe refuses the ambiguous selector |
 | `batch` | many steps in one call, with the resulting screen. Never retried after a failure, since half of it already ran |
@@ -63,6 +63,12 @@ So keep it. `.agents/skills/app-navigation/SKILL.md` is this project's map, writ
 name: app-navigation
 description: Drive this app on the simulator: launch, sign in, reach each area, and the gotchas that cost a session. Use with the simulator skill whenever interacting with the running app.
 ---
+```
+
+Claude Code only finds skills under `.claude/skills/`, and the installer links only the skills that existed when it ran. Link this one when you create it:
+
+```bash
+ln -s ../../.agents/skills/app-navigation .claude/skills/app-navigation
 ```
 
 What goes in, each entry short enough to scan:
