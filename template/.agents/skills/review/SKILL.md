@@ -36,7 +36,7 @@ Do not reach for a ticket tracker or a forge CLI yourself. Every project uses di
 1. Does it do what the ticket asked? A correct implementation of the wrong thing is the most expensive finding and the easiest to miss.
 2. Does it break something it did not mean to touch? Check the other callers of everything it changed.
 3. Is the behaviour change covered by a test that would fail against the old code? When a flag guards it, is the flag-off path still intact and still tested?
-4. Is there anything here that does not need to exist? An abstraction with one implementation, a wrapper that forwards, a parameter nobody passes. A state whose fields combine into something no screen has an answer for, or a `_` in a switch over a sealed type, which is the branch the next state falls into without anyone noticing.
+4. Is there anything here that does not need to exist? An abstraction with one implementation, a wrapper that forwards, a parameter nobody passes. A state whose fields combine into something no screen has an answer for, or a one-time effect stored as state.
 5. Only then, style the analyzer did not catch.
 
 ## How to run it
