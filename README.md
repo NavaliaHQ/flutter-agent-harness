@@ -64,7 +64,10 @@ Every handback ends here, and a line nobody ran does not go in it.
 - `derry test` -> 412 passed
 - `<integration> --flow integration_test/order/add_item.yaml` -> passed
 - not checked: Android, the flag-off path
+- learned: the mock needs the feature flag seeded before login, added to `.agents/facts.md`
 ```
+
+The `learned` line is what carries a session into the next one. Reading `.agents/` was always wired to a moment; writing to it was wired to a condition nobody is present for, so it never happened. Now it is a line in a block the agent already has to fill in, and `learned: nothing` is a valid answer.
 
 Change the structure or the tooling and the diagram changes in the same commit. One that disagrees with the code is worse than none, because people stop reading the code and believe the picture.
 

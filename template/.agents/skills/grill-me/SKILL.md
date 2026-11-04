@@ -1,6 +1,6 @@
 ---
 name: grill-me
-description: Interrogate a plan, a design or an idea until the open decisions are settled, including the ones nobody raised: flags, rollback, how success gets measured, what failure looks like. Use before implementing anything non-trivial, or when the user asks to stress test their thinking, grill them, or poke holes in a plan.
+description: Settle every open decision on a plan or a design before any code is written, in rounds of questions that each carry a recommended answer, including the decisions nobody raised: the flag, the rollback, how success is measured, what failure looks like. Use when the user says grill me, stress test this, poke holes in it, what do you think, is this a good approach, help me decide, should I do this or that, or asks you to plan a feature. Also use on your own, before starting work, whenever more than two decisions are still open, or when a ticket says what to build but not what should happen at the edges.
 ---
 
 # Grill me

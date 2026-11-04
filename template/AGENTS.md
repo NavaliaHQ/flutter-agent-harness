@@ -27,6 +27,21 @@ Prefer the obvious construct to the clever one: the early return over the nested
 
 Never paste raw AI output into an MR, a review reply, a ticket, or a team conversation. Read it first, cut it, and make it yours.
 
+## Make impossible states impossible
+
+The bugs that cost the most are the ones where you read the state and say "this should not be possible". What fixes those is not a guard. It is a shape that could not have held the value.
+
+Yaron Minsky called it making illegal states unrepresentable. Richard Feldman, at elm-conf 2016, put it shorter: testing is good, impossible is better. A state nobody can construct needs no test, no guard and no review comment.
+
+So, before adding a field, a flag or a nullable:
+
+- Count what the shape can represent, not what you intend to put in it. Two optional values and a boolean is eight combinations, and the ones that mean nothing are branches somebody writes or somebody forgets.
+- Optional values that travel together are one thing. When one is only ever set while the other is empty, that is a choice between cases, not a pair of fields.
+- Parse at the boundary rather than validating after it. Convert the loose input once, at the edge, into something the rest of the code cannot misuse.
+- Treat a bug as a question about the model. Ask whether that state needed to be representable, and remove it, rather than adding the test that catches it coming back.
+
+It stops where the type becomes harder to read than the rule it enforces. Some invariants cost more to encode than they cost to test: write the test, and say which invariant it is holding.
+
 ## Verification and evidence
 
 Nothing is done because it looks done. Every claim you hand back is backed by a command that ran in this worktree, or it is named as unchecked.
@@ -71,9 +86,12 @@ Every handback ends with this block, in this shape:
 - `<test> test/features/order/add_item_test.dart` -> 12 passed
 - `<integration> --flow integration_test/order/add_item.yaml` -> passed, artifacts in build/.integration/20261016-1130/
 - not checked: Android, the flag-off path
+- learned: the mock needs the feature flag seeded before login, added to `.agents/facts.md`
 ```
 
 A line you did not run does not go in the block. "not checked" is a sentence of the report, not an apology.
+
+The `learned` line is the one you cannot skip by doing less work, so it is the one that goes stale first. Every task teaches something that was not in the files when you started: a command that is not in `.agents/project.md`, a migration half done that is not in `.agents/facts.md`, a shape the review walked past that is not in `.agents/review-misses.md`. Write it in the file before you write the line, and let the line say which file. When the session genuinely taught nothing, `learned: nothing` is the honest answer and costs four words.
 
 ## Check what you claim
 
@@ -93,7 +111,7 @@ When you could not check something, name the unchecked claim instead of softenin
 ## Working
 
 1. `git status --short --branch` first. Do not touch pre-existing changes without permission.
-2. Ask when the answer would change what you build, and skip it when it would not. A small, direct task with an obvious shape needs no interview, and asking anyway is a toll on someone who already told you enough. A bug is usually not that task: the steps tell you what to press and nothing about what should have happened instead, so a ticket with repro steps is not the same as a ticket with enough. Before the first edit, say what you are assuming and ask for the one or two things that would most reduce the risk of fixing the wrong thing: the screenshot or the video of it happening, the stacktrace, the log line, the device and build, the account. A feature has the mock, the copy, and the state nobody drew. When you truly need nothing, say so in one line along with the assumption you are making, then start on the part that does not depend on an answer rather than waiting for one. When a ticket is involved, read its attachments before its description: the preconditions are usually in the screenshots, not the prose.
+2. Ask when the answer would change what you build, and skip it when it would not. A small, direct task with an obvious shape needs no interview, and asking anyway is a toll on someone who already told you enough. A bug is usually not that task: the steps tell you what to press and nothing about what should have happened instead, so a ticket with repro steps is not the same as a ticket with enough. Before the first edit, say what you are assuming and ask for the one or two things that would most reduce the risk of fixing the wrong thing: the screenshot or the video of it happening, the stacktrace, the log line, the device and build, the account. A feature has the mock, the copy, and the state nobody drew. When you truly need nothing, say so in one line along with the assumption you are making, then start on the part that does not depend on an answer rather than waiting for one. When a ticket is involved, read its attachments before its description: the preconditions are usually in the screenshots, not the prose. Once more than two answers are open at the same time, stop asking them one at a time and load the `grill-me` skill: it asks the whole frontier in one round with a recommendation attached to each question, which is the difference between a decision and a rubber stamp.
 3. Reproduce a bug before you fix it, and keep what it looked like. The failing test, the log line, the screenshot of the wrong screen: that is the first half of the evidence, and the fix is only worth as much as the failure you can show next to it. When you cannot reproduce it, say so and name what stops you, specifically: the account you do not have, the backend state nobody can set locally, the device nobody has. Then say what you changed and why you believe it, so the reviewer knows they are the one testing it.
 4. Read the full affected files and their callers, then fix it at the deepest layer that owns the problem, not the first one where the symptom disappears. Keep going down while the answer to "would this still be wrong if the layer above were correct?" is yes. A guard in the screen that renders stale data is a band-aid when the data was never cleared; a guard in every caller is a band-aid when one shared function could carry it. Say in the handback which layer you fixed at and what you ruled out below it, so the reviewer can disagree with the depth and not just the diff.
 5. Search before you write anything. Something here probably already does it, or does most of it: a helper, an extension, a base class, the same problem solved one directory over. Grep for it rather than assuming it does not exist. Then ask whether the simpler thing already in the codebase would do, before reaching for a new abstraction or a new dependency. Code you did not write is code nobody has to review, break, or maintain.
@@ -113,8 +131,10 @@ Never hand-edit generated files or lockfiles. Change the source and regenerate.
 
 ## This project
 
-- `.agents/project.md` — the commands, the flavors, how this repo points at its mock server. Read it before you run anything.
-- `.agents/facts.md` — what the code cannot tell you: what is being replaced, what is half migrated. Read it before you design anything.
-- `.agents/review-misses.md` — what a human caught that an AI review walked past. Read it before reviewing, and add to it when it happens again.
+- `.agents/project.md` — the commands, the flavors, how this repo points at its mock server. Read it before you run anything. Add to it when you had to work out a command that was not in it, or when one in it was wrong.
+- `.agents/facts.md` — what the code cannot tell you: what is being replaced, what is half migrated. Read it before you design anything. Add to it, dated, when you learn something the next task has to stay in step with.
+- `.agents/review-misses.md` — what a human caught that an AI review walked past. Read it before reviewing. Add to it when the user corrects you in this session on something you had already looked at and passed.
+
+Updating these three is part of the task, not a change you need permission for, because nothing else carries what a session learned into the next one. Each one states the shape of an entry at the top of itself. Follow it, and edit in place rather than appending a near duplicate: a file nobody can skim is a file nobody reads, and then the next session relearns it.
 
 This file belongs to the harness and is overwritten when it updates. Those three belong to the team and are never touched.

@@ -29,6 +29,16 @@ The split below matters. `AGENTS.md` says to build what the task needs and nothi
 | mock backend | `mockoon` | there is a backend for a flow to hit. One JSON environment committed to the repo, response bodies as separate files |
 | usecases | one class per action, with a `call` method | the action is more than a forward to the repository. A usecase that only forwards is a file the reviewer has to open to learn it does nothing |
 
+## Modern Dart
+
+Use the concise syntax where the project's declared language version supports it and the result stays readable:
+
+- **Dot shorthands**, Dart 3.10+: `Status status = .loading;` when the type is clear from context.
+- **Private named parameters**, Dart 3.12+: `OrderCubit({required this._repository});`, called with `repository:`.
+- **Primary constructors**, Dart 3.13+: `class Point(final int x, final int y);` for straightforward declarations.
+
+Do not raise a project's SDK constraint or rewrite unrelated code just to use these. Check the [language version](https://dart.dev/language/versioning), not only the installed SDK.
+
 ## Setup that is easy to get wrong
 
 `derry` does not find `derry.yaml` by itself. `pubspec.yaml` needs a `scripts:` key pointing at it, or every command fails with the alias not found:
@@ -119,7 +129,7 @@ emit(state.copyWith(showPaymentDeclined: true));
 emitPresentation(const PaymentDeclinedEvent());
 ```
 
-State is re-read on every rebuild, so a flag in state reopens the dialog each time the widget rebuilds, and clearing it needs a second emit that somebody will forget.
+A one-time effect does not belong in persistent state: a flag adds combinations the screen does not need and requires clearing. Keep state for what the screen renders and use presentation events for dialogs, snackbars and navigation.
 
 ### Flows match identifiers, never copy
 
