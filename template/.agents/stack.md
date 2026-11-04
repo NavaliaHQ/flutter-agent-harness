@@ -12,6 +12,7 @@ The split below matters. `AGENTS.md` says to build what the task needs and nothi
 |---|---|---|
 | architecture | clean architecture, three layers | the layer boundary is what makes logic testable without a widget, and retrofitting it later means moving every file |
 | state | cubit, via `flutter_bloc` | fewer moving parts than bloc events for what these apps do |
+| state shape | one `sealed` class per cubit, one variant per shape, no nullable field shared between them | this is where `AGENTS.md` on impossible states becomes a compiler error instead of a habit. See below |
 | error handling | a `Result<E, S>` type on every fallible call | makes the error path a compile time obligation instead of a `try` somebody forgot |
 | DI | `get_it`, registration split by layer | the locator is reachable from dependency registration and route builders, nowhere else. Everything else takes constructor injection |
 | unit mocks | `mocktail` | no codegen step on the test loop |
@@ -74,6 +75,49 @@ class OrderCubit extends Cubit<OrderState> {
 ```
 
 The constructor is the only honest list of what a class needs. A locator call inside the body hides it, and a test that wants one cubit now has to register the whole object graph to build it. The locator belongs in dependency registration and route builders, nowhere else.
+
+### A state cannot hold a contradiction
+
+```dart
+// bad
+class OrderState {
+  const OrderState({this.isLoading = false, this.order, this.failure});
+
+  final bool isLoading;
+  final Order? order;
+  final Failure? failure;
+}
+
+// good
+sealed class OrderState {
+  const OrderState();
+}
+
+class OrderLoading extends OrderState {
+  const OrderLoading();
+}
+
+class OrderLoaded extends OrderState {
+  const OrderLoaded(this.order);
+
+  final Order order;
+}
+
+class OrderUnavailable extends OrderState {
+  const OrderUnavailable(this.failure);
+
+  final Failure failure;
+}
+```
+
+The first can hold loading with an order already in it, an order and a failure together, and nothing at all. Every one of those is a combination some widget has to answer for, and the answer is a chain of `if` that gets one case wrong. The second cannot be written down, and the analyzer turns the rest into an error rather than a convention:
+
+```
+error - The type 'OrderState' isn't exhaustively matched by the switch cases
+since it doesn't match the pattern 'OrderUnavailable()'. - non_exhaustive_switch_expression
+```
+
+`sealed` is what buys that. `abstract` does not: anything can extend it, so every switch needs a `_`, and `_` is where the next state lands in silence. For the same reason, no `_` and no `default` in a switch over a sealed state, however harmless it looks on the day it is written. No lint catches that one, so it is on the reviewer.
 
 ### A failed `Result` is handled, not defaulted away
 

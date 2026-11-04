@@ -11,7 +11,7 @@ The human who approves is the gate. This review exists to make their read shorte
 
 `.agents/review-misses.md` is what humans caught in this repo that an AI review walked past. Read it before the diff. It is short on purpose, and every entry is there because the review already failed once on that exact shape.
 
-When the human who approves finds something you did not, that is an entry. Add it: what was wrong, why the review walked past it, what to check instead. Three lines, and only for a real miss.
+When the user corrects you on something this review already looked at and passed, that is an entry, and it is the only moment you will ever see one: the human who approves finds the rest of them in the MR, days later, with this session long gone. So write it while you are still here. What was wrong, why the review walked past it, what to check instead. Three lines, and only for a real miss.
 
 ## Ask first
 
@@ -36,7 +36,7 @@ Do not reach for a ticket tracker or a forge CLI yourself. Every project uses di
 1. Does it do what the ticket asked? A correct implementation of the wrong thing is the most expensive finding and the easiest to miss.
 2. Does it break something it did not mean to touch? Check the other callers of everything it changed.
 3. Is the behaviour change covered by a test that would fail against the old code? When a flag guards it, is the flag-off path still intact and still tested?
-4. Is there anything here that does not need to exist? An abstraction with one implementation, a wrapper that forwards, a parameter nobody passes.
+4. Is there anything here that does not need to exist? An abstraction with one implementation, a wrapper that forwards, a parameter nobody passes. A state whose fields combine into something no screen has an answer for, or a `_` in a switch over a sealed type, which is the branch the next state falls into without anyone noticing.
 5. Only then, style the analyzer did not catch.
 
 ## How to run it
